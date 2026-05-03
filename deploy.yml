@@ -27,7 +27,7 @@ jobs:
             git pull origin main 2>/dev/null || git clone https://github.com/xfville-art/Jarvs.git .
 
             # Écrire le fichier d'environnement avec le secret (jamais dans le repo)
-            echo "JARVIS_SECRET=${{ secrets.JARVIS_SECRET }}" > .env
+            echo "JARVIS=${{ secrets.JARVIS }}" > .env
 
             # Tuer l'ancien serveur HTTP s'il tourne
             pkill -f "python.*server.py" || true

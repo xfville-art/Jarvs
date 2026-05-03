@@ -4,7 +4,7 @@ J.A.R.V.I.S — Serveur HTTP sécurisé par token secret
 Le token est injecté via variable d'environnement (GitHub Secret).
 
 Lancement :
-    JARVIS_SECRET=montoken python server.py
+    JARVIS=montoken python server.py
 
 Ou via le script de déploiement GitHub Actions (automatique).
 """
@@ -20,7 +20,7 @@ from urllib.parse import urlparse, parse_qs
 # ── Configuration ──────────────────────────────────────────────────────────
 PORT         = 8080
 # Lire le secret depuis la variable d'environnement injectée par GitHub Actions
-SECRET_TOKEN = os.environ.get("JARVIS_SECRET", "")
+SECRET_TOKEN = os.environ.get("JARVIS", "")
 SESSION_KEY  = secrets.token_hex(32)
 SESSION_TTL  = 60 * 60 * 24 * 7  # 7 jours
 
@@ -28,7 +28,7 @@ SERVE_DIR = os.path.dirname(os.path.abspath(__file__))
 # ──────────────────────────────────────────────────────────────────────────
 
 if not SECRET_TOKEN:
-    raise SystemExit("[ERREUR] Variable d'environnement JARVIS_SECRET non définie.")
+    raise SystemExit("[ERREUR] Variable d'environnement JARVIS non définie.")
 
 
 def make_session_cookie() -> str:
