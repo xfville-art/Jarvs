@@ -8,7 +8,10 @@
  */
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const WS_URL = `ws://${window.location.hostname}:8765`;
+const BACKEND_HOST = "frvill.duckdns.org";
+const BACKEND_WS_PORT = 8765;
+const WS_PROTOCOL = window.location.protocol === "https:" ? "wss" : "ws";
+const WS_URL = `${WS_PROTOCOL}://${BACKEND_HOST}:${BACKEND_WS_PORT}`;
 const RECONNECT_DELAY_MS = 2500;
 const SPEECH_LANG = "fr-FR";
 
@@ -33,18 +36,26 @@ if (typeof createOrb === "function") {
   }
 }
 
-// ── HTTPS Warning ───────────────────────────────────────────────────────────
-if (window.location.protocol !== "https:" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+// ── HTTPS / Mixed Content Warning ───────────────────────────────────────────
+const isHttps = window.location.protocol === "https:";
+const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+
+// Sur HTTP non-localhost : micro bloqué
+if (!isHttps && !isLocalhost) {
   const warning = document.getElementById("https-warning");
   if (warning) {
     warning.style.display = "block";
     const closeBtn = document.getElementById("close-warning-btn");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        warning.style.display = "none";
-      });
-    }
+    if (closeBtn) closeBtn.addEventListener("click", () => { warning.style.display = "none"; });
   }
+}
+
+// Sur HTTPS (ex: GitHub Pages) avec backend ws:// : mixed-content bloqué
+if (isHttps && WS_PROTOCOL === "wss") {
+  // wss:// requis — si le backend Python n'a pas SSL, la connexion échouera.
+  // Solution : activer dans Chrome : chrome://flags -> Insecure origins treated as secure
+  // Ou configurer nginx/caddy comme reverse proxy wss:// → ws:// sur frvill.duckdns.org
+  console.warn("[CONFIG] Page servie en HTTPS. Connexion WebSocket via wss://. Assurez-vous que le backend supporte wss:// ou activez l'exception dans chrome://flags.");
 }
 
 // ── État de l'application ───────────────────────────────────────────────────
