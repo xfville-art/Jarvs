@@ -1,0 +1,38 @@
+name: Deploy JARVIS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Déployer sur le serveur via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            # Aller dans le dossier du projet (créer si besoin)
+            mkdir -p ~/jarvis
+            cd ~/jarvis
+
+            # Récupérer les derniers fichiers depuis GitHub
+            git pull origin main 2>/dev/null || git clone https://github.com/xfville-art/Jarvs.git .
+
+            # Écrire le fichier d'environnement avec le secret (jamais dans le repo)
+            echo "JARVIS_SECRET=${{ secrets.JARVIS_SECRET }}" > .env
+
+            # Tuer l'ancien serveur HTTP s'il tourne
+            pkill -f "python.*server.py" || true
+            sleep 1
+
+            # Relancer server.py en arrière-plan avec le secret injecté
+            nohup env $(cat .env) python3 server.py > logs/server.log 2>&1 &
+            echo "[OK] JARVIS redémarré (PID $!)"
